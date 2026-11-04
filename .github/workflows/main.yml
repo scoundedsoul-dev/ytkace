@@ -1,0 +1,37 @@
+name: Build YTKACE IPA
+
+on:
+  workflow_dispatch:
+    inputs:
+      ipa_url:
+        description: 'Direct URL to Decrypted YouTube IPA'
+        required: true
+        default: ''
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Environment
+        run: |
+          brew install iproxy
+          pip3 install pyzule
+
+      - name: Download YouTube IPA
+        run: |
+          curl -L "${{ github.event.inputs.ipa_url }}" -o youtube.ipa
+
+      - name: Inject YTKACE Tweak
+        run: |
+          # Clones and compiles/injects tweak deb into base IPA
+          pyzule -i youtube.ipa -o YTKACE_Custom.ipa
+
+      - name: Upload Output Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: YTKACE-Build
+          path: YTKACE_Custom.ipa
